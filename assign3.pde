@@ -7,8 +7,26 @@ final int START_BUTTON_H = 60;
 final int START_BUTTON_X = 248;
 final int START_BUTTON_Y = 360;
 
+final int SOIL_SIZE = 80;
+final int GRID = 80;
+
+final int HEALTH_WIDTH = 50;
+final int HEALTH_GAP = 20;
+int healthOneX = 10;
+int healthOneY = 10;
+
+int hogIdleX = GRID*4;
+int hogIdleY = 80;
+
 PImage title, gameover, startNormal, startHovered, restartNormal, restartHovered;
-PImage bg, soil8x24;
+PImage bg, soil0, soil1, soil2, soil3, soil4, soil5, soil6;
+PImage health, stone1, stone2;
+PImage hogIdle, hogDown, hogLeft, hogRight;
+
+boolean downPressed = false;
+boolean leftPressed = false;
+boolean rightPressed = false;
+boolean noPressed = true;
 
 // For debug function; DO NOT edit or remove this!
 int playerHealth = 0;
@@ -25,7 +43,19 @@ void setup() {
 	startHovered = loadImage("img/startHovered.png");
 	restartNormal = loadImage("img/restartNormal.png");
 	restartHovered = loadImage("img/restartHovered.png");
-	soil8x24 = loadImage("img/soil8x24.png");
+  soil0 = loadImage("img/soil0.png");
+  soil1 = loadImage("img/soil1.png");
+  soil2 = loadImage("img/soil2.png");
+  soil3 = loadImage("img/soil3.png");
+  soil4 = loadImage("img/soil4.png");
+  soil5 = loadImage("img/soil5.png");
+  health = loadImage("img/life.png");
+  stone1 = loadImage("img/stone1.png");
+  stone2 = loadImage("img/stone2.png");
+  hogIdle = loadImage("img/groundhogIdle.png");
+  hogDown = loadImage("img/groundhogDown.png");
+  hogLeft = loadImage("img/groundhogLeft.png");
+  hogRight = loadImage("img/groundhogRight.png");
 }
 
 void draw() {
@@ -71,10 +101,19 @@ void draw() {
 		image(bg, 0, 0);
 
 		// Sun
-	    stroke(255,255,0);
-	    strokeWeight(5);
-	    fill(253,184,19);
-	    ellipse(590,50,120,120);
+	  stroke(255,255,0);
+	  strokeWeight(5);
+	  fill(253,184,19);
+	  ellipse(590,50,120,120);
+
+    if (hogIdleY > 80){
+      pushMatrix();
+      if (hogIdleY > GRID*21){
+      translate(0, 80-GRID*21);
+      } else {
+        translate(0, 80-hogIdleY);
+      }
+    }
 
 		// Grass
 		fill(124, 204, 25);
@@ -82,11 +121,112 @@ void draw() {
 		rect(0, 160 - GRASS_HEIGHT, width, GRASS_HEIGHT);
 
 		// Soil - REPLACE THIS PART WITH YOUR LOOP CODE!
-		image(soil8x24, 0, 160);
+		// image(soil8x24, 0, 160);
+    for (int i=0; i<=width; i+=SOIL_SIZE){
+      for (int j=0; j<=SOIL_SIZE*23; j+=SOIL_SIZE){
+        if (j <= SOIL_SIZE*3){
+          image(soil0, i, 160+j); 
+          if (i == j){
+            image(stone1, i, 160+j);
+          }
+        } else if ( j <= SOIL_SIZE*7){
+          image(soil1, i, 160+j);
+          if (i == j){
+            image(stone1, i, 160+j);
+          }
+        } else if ( j <= SOIL_SIZE*11){
+          image(soil2, i, 160+j);
+          if (i == SOIL_SIZE || i == SOIL_SIZE*2 || i == SOIL_SIZE*5 || i == SOIL_SIZE*6){
+            if (j == SOIL_SIZE*8 || j == SOIL_SIZE*11){
+              image(stone1, i, 160+j);
+            } 
+          } else {
+            if (j == SOIL_SIZE*9 || j == SOIL_SIZE*10){
+              image(stone1, i, 160+j);
+            }
+          }
+        } else if ( j <= SOIL_SIZE*15){
+          image(soil3, i, 160+j);
+          if (i == SOIL_SIZE || i == SOIL_SIZE*2 || i == SOIL_SIZE*5 || i == SOIL_SIZE*6){
+            if (j == SOIL_SIZE*12 || j == SOIL_SIZE*15){
+              image(stone1, i, 160+j);
+            } 
+          } else {
+            if (j == SOIL_SIZE*13 || j == SOIL_SIZE*14){
+              image(stone1, i, 160+j);
+            }
+          }
+        } else if (j <= SOIL_SIZE*19){
+          image(soil4, i, 160+j);
+          if (i+j != SOIL_SIZE*16 && i+j != SOIL_SIZE*19  && i+j != SOIL_SIZE*22 && i+j != SOIL_SIZE*25 && i+j != SOIL_SIZE*28){
+            image(stone1, i, 160+j);
+          }
+          if (i+j == SOIL_SIZE*18 || i+j == SOIL_SIZE*21  || i+j == SOIL_SIZE*24 || i+j == SOIL_SIZE*27 || i+j == SOIL_SIZE*30){
+            image(stone2, i, 160+j);
+          }
+        } else {
+          image(soil5, i, 160+j);
+          if (i+j != SOIL_SIZE*16 && i+j != SOIL_SIZE*19  && i+j != SOIL_SIZE*22 && i+j != SOIL_SIZE*25 && i+j != SOIL_SIZE*28){
+            image(stone1, i, 160+j);
+          }
+          if (i+j == SOIL_SIZE*18 || i+j == SOIL_SIZE*21  || i+j == SOIL_SIZE*24 || i+j == SOIL_SIZE*27 || i+j == SOIL_SIZE*30){
+            image(stone2, i, 160+j);
+          }
+        } 
+      }
+    }
 
-		// Player
+		// Player // decide hog's direction
+    if (downPressed == true){
+      leftPressed = false;
+      rightPressed = false;
+      noPressed = false;
+      image(hogDown, hogIdleX, hogIdleY);
+    } 
+    if (leftPressed == true){
+      downPressed = false;
+      rightPressed = false;
+      noPressed = false;
+      image(hogLeft, hogIdleX, hogIdleY);
+    } 
+    if (rightPressed == true){
+      downPressed = false;
+      leftPressed = false;
+      noPressed = false;
+      image(hogRight, hogIdleX, hogIdleY);
+    }
+    if (noPressed == true){
+    image(hogIdle, hogIdleX, hogIdleY);
+    }
+
+    if (hogIdleY > 80){
+      popMatrix();
+    }
 
 		// Health UI
+    if (playerHealth >= 5){
+      for (int i=healthOneX; i<=healthOneX+(HEALTH_WIDTH+HEALTH_GAP)*4; i+=(HEALTH_WIDTH+HEALTH_GAP)){
+        image(health, i, healthOneY);
+      }
+    }
+    if (playerHealth == 4){
+      for (int i=healthOneX; i<=healthOneX+(HEALTH_WIDTH+HEALTH_GAP)*3; i+=(HEALTH_WIDTH+HEALTH_GAP)){
+        image(health, i, healthOneY);
+      }
+    }
+    if (playerHealth == 3){
+      for (int i=healthOneX; i<=healthOneX+(HEALTH_WIDTH+HEALTH_GAP)*2; i+=(HEALTH_WIDTH+HEALTH_GAP)){
+        image(health, i, healthOneY);
+      }
+    }
+    if (playerHealth == 2){
+      for (int i=healthOneX; i<=healthOneX+(HEALTH_WIDTH+HEALTH_GAP)*1; i+=(HEALTH_WIDTH+HEALTH_GAP)){
+        image(health, i, healthOneY);
+      }
+    }
+    if (playerHealth == 1){
+      image(health, healthOneX, healthOneY);
+    }
 
 		break;
 
@@ -117,10 +257,39 @@ void draw() {
     if (debugMode) {
         popMatrix();
     }
+    
 }
 
 void keyPressed(){
 	// Add your moving input code here
+  if (key == CODED) {
+    switch (keyCode) {
+      case DOWN:
+        downPressed = true;
+        noPressed = false;
+        hogIdleY += GRID;
+        if (hogIdleY > SOIL_SIZE*25){
+          hogIdleY = SOIL_SIZE*25;
+        }
+        break;
+      case LEFT:
+        leftPressed = true;
+        noPressed = false;
+        hogIdleX -= GRID;
+        if(hogIdleX <= 0){
+          hogIdleX = 0;
+        }
+        break;
+      case RIGHT:
+        rightPressed = true;
+        noPressed = false;
+        hogIdleX += GRID;
+        if(hogIdleX >= width){
+          hogIdleX = GRID*7;
+        }
+        break;
+    }
+  } 
 
 	// DO NOT REMOVE OR EDIT THE FOLLOWING SWITCH/CASES
     switch(key){
@@ -145,4 +314,20 @@ void keyPressed(){
 }
 
 void keyReleased(){
+  if (key == CODED) {
+    switch (keyCode) {
+      case DOWN:
+        downPressed = false;
+        noPressed = true;
+        break;
+      case LEFT:
+        leftPressed = false;
+        noPressed = true;
+        break;
+      case RIGHT:
+        rightPressed = false;
+        noPressed = true;
+        break;
+    }
+  } 
 }
