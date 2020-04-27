@@ -15,8 +15,14 @@ final int HEALTH_GAP = 20;
 int healthOneX = 10;
 int healthOneY = 10;
 
-int hogIdleX = GRID*4;
-int hogIdleY = 80;
+float hogIdleX = GRID*4;
+float hogIdleY = 80;
+
+// hog's move
+int MoveTime = 250;
+int actionFrame = 0;
+float lastTime;
+float hogLestY, hogLestX;
 
 PImage title, gameover, startNormal, startHovered, restartNormal, restartHovered;
 PImage bg, soil0, soil1, soil2, soil3, soil4, soil5, soil6;
@@ -26,10 +32,9 @@ PImage hogIdle, hogDown, hogLeft, hogRight;
 boolean downPressed = false;
 boolean leftPressed = false;
 boolean rightPressed = false;
-boolean noPressed = true;
 
 // For debug function; DO NOT edit or remove this!
-int playerHealth = 0;
+int playerHealth = 2;
 float cameraOffsetY = 0;
 boolean debugMode = false;
 
@@ -56,6 +61,10 @@ void setup() {
   hogDown = loadImage("img/groundhogDown.png");
   hogLeft = loadImage("img/groundhogLeft.png");
   hogRight = loadImage("img/groundhogRight.png");
+  
+  frameRate(60);
+  gameState = GAME_START;
+  lastTime = millis();
 }
 
 void draw() {
@@ -106,14 +115,14 @@ void draw() {
 	  fill(253,184,19);
 	  ellipse(590,50,120,120);
 
-    if (hogIdleY > 80){
+    //if (hogIdleY > 80){
       pushMatrix();
       if (hogIdleY > GRID*21){
       translate(0, 80-GRID*21);
       } else {
         translate(0, 80-hogIdleY);
       }
-    }
+    //}
 
 		// Grass
 		fill(124, 204, 25);
@@ -176,34 +185,62 @@ void draw() {
       }
     }
 
-		// Player // decide hog's direction
-    if (downPressed == true){
-      leftPressed = false;
-      rightPressed = false;
-      noPressed = false;
-      image(hogDown, hogIdleX, hogIdleY);
-    } 
-    if (leftPressed == true){
-      downPressed = false;
-      rightPressed = false;
-      noPressed = false;
-      image(hogLeft, hogIdleX, hogIdleY);
-    } 
-    if (rightPressed == true){
-      downPressed = false;
-      leftPressed = false;
-      noPressed = false;
-      image(hogRight, hogIdleX, hogIdleY);
+    // decide hog's direction
+    if (downPressed == false && leftPressed == false && rightPressed == false) {
+      image(hogIdle, hogIdleX, hogIdleY);
     }
-    if (noPressed == true){
-    image(hogIdle, hogIdleX, hogIdleY);
+    if (downPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleY += GRID/15.0;
+        image(hogDown, hogIdleX, hogIdleY);
+      } else{
+        hogIdleY = hogLestY + GRID;
+        downPressed = false;
+      }
+    } 
+    if (leftPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleX -= GRID/15.0;
+        image(hogLeft, hogIdleX, hogIdleY);
+      } else{
+        hogIdleX = hogLestX - GRID;
+        leftPressed = false;
+      }
+    } 
+    if (rightPressed){
+      actionFrame++;
+      if (actionFrame > 0 && actionFrame < 15){
+        hogIdleX += GRID/15.0;
+        image(hogRight, hogIdleX, hogIdleY);
+      } else{
+        hogIdleX = hogLestX + GRID;
+        rightPressed = false;
+      }
     }
-
-    if (hogIdleY > 80){
+    
+    //groundhog: boundary detection
+    if (hogIdleX >= width - GRID) {
+      hogIdleX = width - GRID;
+    }
+    if (hogIdleX <= 0) {
+      hogIdleX = 0;
+    }
+    if (hogIdleY >= GRID*25) {
+      hogIdleY = GRID*25;
+    }
+    if (hogIdleY <= 0) {
+      hogIdleY = 0;
+    }
+    
+    
+    //if (hogIdleY > 80){
       popMatrix();
-    }
+    //}
 
 		// Health UI
+
     if (playerHealth >= 5){
       for (int i=healthOneX; i<=healthOneX+(HEALTH_WIDTH+HEALTH_GAP)*4; i+=(HEALTH_WIDTH+HEALTH_GAP)){
         image(health, i, healthOneY);
@@ -261,33 +298,33 @@ void draw() {
 }
 
 void keyPressed(){
-	// Add your moving input code here
+  float newTime = millis();
   if (key == CODED) {
     switch (keyCode) {
       case DOWN:
-        downPressed = true;
-        noPressed = false;
-        hogIdleY += GRID;
-        if (hogIdleY > SOIL_SIZE*25){
-          hogIdleY = SOIL_SIZE*25;
+        if (newTime - lastTime > 250){
+          downPressed = true;
+          actionFrame = 0;
+          hogLestY = hogIdleY;
+          lastTime = newTime;
         }
         break;
       case LEFT:
-        leftPressed = true;
-        noPressed = false;
-        hogIdleX -= GRID;
-        if(hogIdleX <= 0){
-          hogIdleX = 0;
+        if (newTime - lastTime > 250){
+          leftPressed = true;
+          actionFrame = 0;
+          hogLestX = hogIdleX;
+          lastTime = newTime;
         }
         break;
       case RIGHT:
-        rightPressed = true;
-        noPressed = false;
-        hogIdleX += GRID;
-        if(hogIdleX >= width){
-          hogIdleX = GRID*7;
+        if (newTime - lastTime > 250){
+          rightPressed = true;
+          actionFrame = 0;
+          hogLestX = hogIdleX;
+          lastTime = newTime;
         }
-        break;
+      break;
     }
   } 
 
@@ -311,23 +348,4 @@ void keyPressed(){
       if(playerHealth < 5) playerHealth ++;
       break;
     }
-}
-
-void keyReleased(){
-  if (key == CODED) {
-    switch (keyCode) {
-      case DOWN:
-        downPressed = false;
-        noPressed = true;
-        break;
-      case LEFT:
-        leftPressed = false;
-        noPressed = true;
-        break;
-      case RIGHT:
-        rightPressed = false;
-        noPressed = true;
-        break;
-    }
-  } 
 }
